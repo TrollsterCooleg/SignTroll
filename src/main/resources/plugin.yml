@@ -1,0 +1,6 @@
+name: Sign
+version: '${project.version}'
+main: com.cooleg.sign.Main
+api-version: 1.18
+commands:
+  chaos:
