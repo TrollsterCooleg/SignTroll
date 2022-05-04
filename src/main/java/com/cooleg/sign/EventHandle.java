@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -34,6 +35,7 @@ public class EventHandle implements Listener {
             config.set("x", loc.getBlockX());
             config.set("y", loc.getBlockY());
             config.set("z", loc.getBlockZ());
+            config.set("world", loc.getWorld().getName());
             main.saveConfig();
             for (Player p : Bukkit.getOnlinePlayers()) {
                 setSign(p);
@@ -45,13 +47,11 @@ public class EventHandle implements Listener {
     public void onBreak(BlockBreakEvent e) {
         ConfigurationSection config = main.getConfig();
         Location loc = e.getBlock().getLocation();
-        if (loc.getBlockX() == config.getInt("x") && loc.getBlockY() == config.getInt("y") && loc.getBlockZ() == config.getInt("z")) {
+        if (loc.getBlockX() == config.getInt("x") && loc.getBlockY() == config.getInt("y") && loc.getBlockZ() == config.getInt("z") && loc.getWorld() == Bukkit.getWorld(config.getString("world"))) {
             if (e.getPlayer().hasPermission("sign.troll")) {
                 return;
             } else {
-                for (Player p : Bukkit.getOnlinePlayers()) {
-                    setSign(p);
-                }
+                setSign(e.getPlayer());
                 e.setCancelled(true);
             }
         }
@@ -62,6 +62,22 @@ public class EventHandle implements Listener {
         setSign(e.getPlayer());
 
     }
+
+    @EventHandler
+    public void interact(PlayerInteractEvent e) {
+        if (e.getClickedBlock() == null) {return;}
+        ConfigurationSection config = main.getConfig();
+        Location loc = e.getClickedBlock().getLocation();
+        if (loc.getBlockX() == config.getInt("x") && loc.getBlockY() == config.getInt("y") && loc.getBlockZ() == config.getInt("z") && loc.getWorld() == Bukkit.getWorld(config.getString("world"))) {
+            if (e.getPlayer().hasPermission("sign.troll")) {
+                return;
+            } else {
+                setSign(e.getPlayer());
+                e.setCancelled(true);
+            }
+        }
+    }
+
 
     public void setSign(Player p) {
         new BukkitRunnable() {
@@ -80,9 +96,11 @@ public class EventHandle implements Listener {
                     world = Bukkit.getWorld(config.getString("world"));
                     loc = new Location(world, x, y, z);
                     Sign sign = (Sign) loc.getBlock().getState();
-                    String[] signView = {" ", p.getName() + "'s IP:", p.getAddress().getAddress().toString().substring(1), " "};
+                    String[] signView = {" ", p.getName() + "'s IP:", p.getAddress().getAddress().getHostAddress(), " "};
                     p.sendSignChange(loc, signView);
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                    Bukkit.getLogger().severe(e.getMessage());
+                }
 
             }
         }.runTaskLater(main, 5L);
